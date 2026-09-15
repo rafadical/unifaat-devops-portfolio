@@ -1,0 +1,3 @@
+bucket         = "SUBSTITUIR-PELO-OUTPUT-DO-BACKEND"
+region         = "us-east-1"
+dynamodb_table = "6322006-technova-aula05-locks"
