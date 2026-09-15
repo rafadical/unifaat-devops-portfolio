@@ -2,7 +2,7 @@
 
 **Aluno:** rafael nogueira maruca — **RA:** 6322006
 
-A solução provisiona a rede da TechNova, uma EC2 com cliente PostgreSQL e um RDS privado. Um projeto Terraform separado cria o bucket do state e a tabela de locking. A implementação local não representa prova de execução na AWS; consulte VALIDACAO.md para os testes realmente realizados.
+A solução provisiona a rede da TechNova, uma EC2 com cliente PostgreSQL e um RDS privado. Um projeto Terraform separado cria o bucket do state e a tabela de locking. A infraestrutura foi aplicada de verdade no AWS Academy Learner Lab, validada (conexão EC2→RDS via psql, dados na tabela `orders`, state no S3, `terraform plan` limpo) e destruída em seguida — ver `evidencias/` e `VALIDACAO.md`.
 
 ## Arquitetura e decisões
 

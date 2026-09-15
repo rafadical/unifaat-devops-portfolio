@@ -34,12 +34,19 @@ O backend remoto (`aula-05/backend`) foi aplicado com sucesso contra a conta rea
 - Tabela DynamoDB `6322006-technova-aula05-locks` confirmada (lock table).
 - Log real em `evidencias/backend-apply.txt`.
 
+## Infraestrutura principal aplicada e validada na AWS
+
+`terraform apply` em `aula-05/` (VPC, RDS PostgreSQL, EC2) executado com sucesso contra a conta real do AWS Academy Learner Lab: `Apply complete! Resources: 16 added, 0 changed, 0 destroyed.`
+
+- user_data instalou `postgresql15` na EC2 (Amazon Linux 2023); `psql --version` confirmado via SSH (EC2 Instance Connect).
+- Conexão EC2 → RDS via psql: `SELECT version()` retornou `PostgreSQL 15.17` (ver `evidencias/rds-connection.txt`).
+- Tabela `orders` criada e populada (5 registros) via `sql/orders.sql` (ver `evidencias/orders-data.txt`).
+- State remoto confirmado no S3 (ver `evidencias/state-s3.txt`).
+- `terraform plan` pós-apply: `No changes. Your infrastructure matches the configuration.` (ver `evidencias/plan-clean.txt`).
+- `terraform destroy` executado com sucesso na infraestrutura principal (16 destruídos) e no backend (5 destruídos, incluindo a tabela DynamoDB); o bucket S3 (criado fora do Terraform) foi esvaziado e removido via AWS CLI.
+
 ## O que ainda não foi verificado
 
-- `terraform apply` da infraestrutura principal (VPC, RDS, EC2) contra recursos reais.
-- Instalação real do psql pelo user_data e conectividade SSH.
-- SELECT version(), SELECT de orders e persistência após reiniciar a EC2.
-- Plan real com No changes e destruição real da infraestrutura/backend.
 - Pré-check remoto e avaliação do professor no GitHub: PR de entrega ainda não foi aberto.
 
 Não existe nota atribuída pelo professor, nem garantia de aprovação baseada apenas nesses testes.
