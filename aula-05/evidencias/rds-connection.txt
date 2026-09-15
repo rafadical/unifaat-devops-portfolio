@@ -1,0 +1,6 @@
+﻿$ psql "host=technova-6322006-aula05-db.cpgishv9reyu.us-east-1.rds.amazonaws.com port=5432 dbname=technova user=technova_admin sslmode=require" -c "SELECT version();"
+
+                                              version
+---------------------------------------------------------------------------------------------------
+ PostgreSQL 15.17 on x86_64-pc-linux-gnu, compiled by x86_64-pc-linux-gnu-gcc (GCC) 12.4.0, 64-bit
+(1 row)

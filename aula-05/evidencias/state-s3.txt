@@ -1,0 +1,2 @@
+﻿$ aws s3 ls s3://6322006-technova-tfstate-533129404111-us-east-1/aula-05/6322006/
+2026-09-14 22:58:09      39471 terraform.tfstate

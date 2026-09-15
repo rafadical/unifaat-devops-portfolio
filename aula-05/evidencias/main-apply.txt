@@ -1,0 +1,93 @@
+﻿
+Warning: Deprecated Parameter
+
+The parameter "dynamodb_table" is deprecated. Use parameter "use_lockfile"
+instead.
+Acquiring state lock. This may take a few moments...
+aws_key_pair.student: Creating...
+aws_vpc.main: Creating...
+aws_key_pair.student: Creation complete after 1s [id=technova-6322006-aula05-key]
+aws_vpc.main: Still creating... [00m10s elapsed]
+aws_vpc.main: Creation complete after 14s [id=vpc-09b4ad049dbe4efcb]
+aws_security_group.ec2: Creating...
+aws_internet_gateway.main: Creating...
+aws_route_table.private: Creating...
+aws_subnet.public: Creating...
+aws_subnet.private[0]: Creating...
+aws_subnet.private[1]: Creating...
+aws_route_table.private: Creation complete after 1s [id=rtb-0fde9cb2650b545df]
+aws_internet_gateway.main: Creation complete after 1s [id=igw-076f4bab868ee0150]
+aws_route_table.public: Creating...
+aws_subnet.private[1]: Creation complete after 1s [id=subnet-087c275f3e676bede]
+aws_subnet.private[0]: Creation complete after 1s [id=subnet-046768432bf37acd4]
+aws_route_table_association.private[1]: Creating...
+aws_route_table_association.private[0]: Creating...
+aws_db_subnet_group.database: Creating...
+aws_route_table_association.private[0]: Creation complete after 1s [id=rtbassoc-066540050a12ee949]
+aws_route_table_association.private[1]: Creation complete after 1s [id=rtbassoc-01df2e3d29d79d2ac]
+aws_route_table.public: Creation complete after 2s [id=rtb-07b8f33605427add8]
+aws_security_group.ec2: Creation complete after 3s [id=sg-01c22891837d497dc]
+aws_security_group.rds: Creating...
+aws_db_subnet_group.database: Creation complete after 3s [id=technova-6322006-aula05-db-subnets]
+aws_security_group.rds: Creation complete after 4s [id=sg-003d7f21b3d69f8a7]
+aws_db_instance.database: Creating...
+aws_subnet.public: Still creating... [00m10s elapsed]
+aws_subnet.public: Creation complete after 14s [id=subnet-0df576a1dc7afa8da]
+aws_route_table_association.public: Creating...
+aws_route_table_association.public: Creation complete after 0s [id=rtbassoc-0262a1e2e239b2e5b]
+aws_instance.app: Creating...
+aws_db_instance.database: Still creating... [00m10s elapsed]
+aws_instance.app: Still creating... [00m10s elapsed]
+aws_db_instance.database: Still creating... [00m20s elapsed]
+aws_instance.app: Creation complete after 15s [id=i-0239d298961693cc1]
+aws_db_instance.database: Still creating... [00m30s elapsed]
+aws_db_instance.database: Still creating... [00m40s elapsed]
+aws_db_instance.database: Still creating... [00m50s elapsed]
+aws_db_instance.database: Still creating... [01m00s elapsed]
+aws_db_instance.database: Still creating... [01m10s elapsed]
+aws_db_instance.database: Still creating... [01m20s elapsed]
+aws_db_instance.database: Still creating... [01m30s elapsed]
+aws_db_instance.database: Still creating... [01m40s elapsed]
+aws_db_instance.database: Still creating... [01m50s elapsed]
+aws_db_instance.database: Still creating... [02m00s elapsed]
+aws_db_instance.database: Still creating... [02m10s elapsed]
+aws_db_instance.database: Still creating... [02m20s elapsed]
+aws_db_instance.database: Still creating... [02m30s elapsed]
+aws_db_instance.database: Still creating... [02m40s elapsed]
+aws_db_instance.database: Still creating... [02m50s elapsed]
+aws_db_instance.database: Still creating... [03m00s elapsed]
+aws_db_instance.database: Still creating... [03m10s elapsed]
+aws_db_instance.database: Still creating... [03m20s elapsed]
+aws_db_instance.database: Still creating... [03m30s elapsed]
+aws_db_instance.database: Still creating... [03m40s elapsed]
+aws_db_instance.database: Still creating... [03m50s elapsed]
+aws_db_instance.database: Still creating... [04m00s elapsed]
+aws_db_instance.database: Still creating... [04m10s elapsed]
+aws_db_instance.database: Still creating... [04m20s elapsed]
+aws_db_instance.database: Still creating... [04m30s elapsed]
+aws_db_instance.database: Still creating... [04m40s elapsed]
+aws_db_instance.database: Still creating... [04m50s elapsed]
+aws_db_instance.database: Still creating... [05m00s elapsed]
+aws_db_instance.database: Still creating... [05m10s elapsed]
+aws_db_instance.database: Still creating... [05m20s elapsed]
+aws_db_instance.database: Still creating... [05m30s elapsed]
+aws_db_instance.database: Still creating... [05m40s elapsed]
+aws_db_instance.database: Creation complete after 5m40s [id=db-K63OTPIULT6USR32LXED2WKGAM]
+
+Apply complete! Resources: 16 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+connection_string = "psql \"host=technova-6322006-aula05-db.cpgishv9reyu.us-east-1.rds.amazonaws.com port=5432 dbname=technova user=technova_admin sslmode=require\" -W"
+ec2_instance_id = "i-0239d298961693cc1"
+ec2_public_ip = "100.27.209.93"
+private_subnet_ids = [
+  "subnet-046768432bf37acd4",
+  "subnet-087c275f3e676bede",
+]
+rds_address = "technova-6322006-aula05-db.cpgishv9reyu.us-east-1.rds.amazonaws.com"
+rds_endpoint = "technova-6322006-aula05-db.cpgishv9reyu.us-east-1.rds.amazonaws.com:5432"
+vpc_id = "vpc-09b4ad049dbe4efcb"
+
+[exited with code 0]
+
