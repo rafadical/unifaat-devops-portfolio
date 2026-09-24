@@ -9,4 +9,10 @@ backend.hcl
 *.key
 aws-creds.*
 .env
+node_modules/
+*.log
+dist/
+build/
+.DS_Store
+Thumbs.db
 crash.log
