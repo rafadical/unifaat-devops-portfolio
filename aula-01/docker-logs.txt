@@ -1,0 +1,15 @@
+Evidencia da execucao do container da Aula 01.
+
+Comandos para gerar a evidencia real no Windows PowerShell:
+
+	cd aula-01/app
+	docker build -t portfolio-aula01:1.0 .
+	docker run -d --name portfolio-test -p 3000:3000 portfolio-aula01:1.0
+	docker ps --filter "name=portfolio-test"
+	curl.exe http://localhost:3000
+	curl.exe http://localhost:3000/health
+	docker logs portfolio-test
+
+Observacao: a validacao Docker ainda precisa ser executada em uma maquina com
+Docker Desktop ativo. Este arquivo nao inventa resultados de uma execucao que
+nao foi realizada neste ambiente.
