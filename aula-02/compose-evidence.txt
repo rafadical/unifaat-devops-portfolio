@@ -1,0 +1,22 @@
+Evidencia da Aula 02 - Docker Compose
+
+Comandos para gerar a evidencia real:
+
+    cd aula-02
+    Copy-Item .env.example .env
+    docker compose config
+    docker compose up -d --build
+    docker compose ps
+    curl.exe http://localhost:3000
+    curl.exe http://localhost:3000/health
+    docker compose exec postgres pg_isready -U technova -d technova
+    docker compose exec redis redis-cli ping
+    docker compose down
+
+Resultado esperado:
+- api, postgres e redis com estado running/healthy
+- API respondendo nas rotas / e /health
+- PostgreSQL respondendo ready
+- Redis respondendo PONG
+
+Observacao: esta evidencia sera preenchida com a saida real apos executar Docker Desktop. Nenhum resultado ficticio foi incluido.
