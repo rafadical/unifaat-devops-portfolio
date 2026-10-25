@@ -1,0 +1,33 @@
+# CD Pipeline — Aula 10 — execução 40243739843
+# https://github.com/rafadical/unifaat-devops-portfolio/actions/runs/40243739843
+job Lint (ESLint): success
+job Test (Jest): success
+job Build e Push (Amazon ECR): success
+job Deploy (Recreate) + Health Check: success
+
+## Test (Jest)
+All files  |      90 |    72.22 |   85.71 |   89.65 |                   
+Tests:       10 passed, 10 total
+
+## Build e Push (ECR)
+#12 naming to 992382590751.dkr.ecr.us-east-1.amazonaws.com/technova-api:latest done
+#12 naming to 992382590751.dkr.ecr.us-east-1.amazonaws.com/technova-api:sha-f11e748 done
+#14 pushing 992382590751.dkr.ecr.us-east-1.amazonaws.com/technova-api:sha-f11e748 with docker
+#15 pushing 992382590751.dkr.ecr.us-east-1.amazonaws.com/technova-api:latest with docker
+
+## Deploy (Recreate via SSH)
+Login no Amazon ECR (antes do pull)...
+Login Succeeded
+Pull de 992382590751.dkr.ecr.us-east-1.amazonaws.com/technova-api:sha-f11e748...
+Status: Downloaded newer image for 992382590751.dkr.ecr.us-east-1.amazonaws.com/technova-api:sha-f11e748
+Recreate: parando e removendo o container atual...
+Error response from daemon: No such container: technova-api
+Error response from daemon: No such container: technova-api
+Subindo a nova versao...
+CONTAINER ID   IMAGE                                                                   COMMAND                  CREATED        STATUS                                     PORTS                                       NAMES
+28d14b1b2a02   992382590751.dkr.ecr.us-east-1.amazonaws.com/technova-api:sha-f11e748   "docker-entrypoint.s…"   1 second ago   Up Less than a second (health: starting)   0.0.0.0:3000->3000/tcp, :::3000->3000/tcp   technova-api
+
+## Health Check
+Aguardando a aplicacao iniciar...
+Health check passou (HTTP 200) na tentativa 1
+Versao confirmada: f11e74852ce6d2055da554fa0922cb6c1f865337

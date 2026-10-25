@@ -101,7 +101,18 @@ cd ../bootstrap && terraform destroy
 | `terraform validate` em `terraform/` e `bootstrap/` | Válido |
 | YAML dos 3 workflows | Sintaxe válida |
 
-Essas verificações não acessam a AWS. A execução real (plan no PR, apply, pipeline CD e health check) está nas evidências em `screenshots/`.
+Essas verificações não acessam a AWS.
+
+## Execução real na AWS (Learner Lab, 25/10/2026)
+
+| Etapa | Execução | Evidência |
+|---|---|---|
+| Apply inicial (11 recursos) | [run 40243554160](https://github.com/rafadical/unifaat-devops-portfolio/actions/runs/40243554160) | [evidencias/apply-initial.txt](evidencias/apply-initial.txt) |
+| Pipeline CD (lint → test → build/push ECR → deploy → health check) | [run 40243739843](https://github.com/rafadical/unifaat-devops-portfolio/actions/runs/40243739843) | [evidencias/cd-pipeline.txt](evidencias/cd-pipeline.txt) |
+| Plan comentado no PR | [PR #1](https://github.com/rafadical/unifaat-devops-portfolio/pull/1) | [evidencias/plan-pr-comment.md](evidencias/plan-pr-comment.md) |
+| Apply após o merge (regra HTTPS 443) | [run 40244007318](https://github.com/rafadical/unifaat-devops-portfolio/actions/runs/40244007318) | [evidencias/apply-after-merge.txt](evidencias/apply-after-merge.txt) |
+
+**Ajuste feito durante a revisão do PR #1:** a primeira versão usava `aws_security_group_rule` separado. Como o SG já tem regras inline, cada apply removeria a regra criada pelo outro recurso. A regra foi movida para um bloco `ingress` inline no mesmo PR, e o plan final ficou `0 to add, 1 to change, 0 to destroy`. É exatamente o tipo de problema que o plan no PR existe para pegar.
 
 ## Autenticação
 

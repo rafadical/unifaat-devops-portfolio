@@ -1,0 +1,16 @@
+  + ecr_repository_url = (known after apply)
+Apply complete! Resources: 11 added, 0 changed, 0 destroyed.
+aws_ecr_lifecycle_policy.technova_api: Creation complete after 0s [id=technova-api]
+aws_ecr_repository.technova_api: Creation complete after 0s [id=technova-api]
+aws_eip.app: Creation complete after 3s [id=eipalloc-04e9ba3eb9f8a123a]
+aws_instance.app: Creation complete after 13s [id=i-03dd65c9088f35605]
+aws_internet_gateway.main: Creation complete after 0s [id=igw-06e0ac20eb576d0ab]
+aws_key_pair.deploy: Creation complete after 0s [id=technova-6322006-aula10-key]
+aws_route_table.public: Creation complete after 1s [id=rtb-05f4d3bcca7f79c51]
+aws_route_table_association.public: Creation complete after 1s [id=rtbassoc-0b40b5270133dc132]
+aws_security_group.technova_api: Creation complete after 3s [id=sg-090c86d7ba5591cfc]
+aws_subnet.public: Creation complete after 11s [id=subnet-0fcf33ed90d8b1cf6]
+aws_vpc.main: Creation complete after 12s [id=vpc-0dd43956096c08227]
+ec2_public_ip = "52.44.206.82"
+ecr_repository_url = "992382590751.dkr.ecr.us-east-1.amazonaws.com/technova-api"
+health_url = "http://52.44.206.82:3000/health"
