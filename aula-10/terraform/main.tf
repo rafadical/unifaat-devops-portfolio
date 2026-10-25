@@ -67,6 +67,17 @@ resource "aws_security_group" "technova_api" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # Mudança aplicada via GitOps (PR → plan comentado → merge → apply).
+  # Fica inline: misturar aws_security_group_rule com ingress inline no mesmo
+  # SG faz cada apply remover a regra criada pelo outro recurso.
+  ingress {
+    description = "Allow HTTPS inbound"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -75,17 +86,6 @@ resource "aws_security_group" "technova_api" {
   }
 
   tags = { Name = "${local.prefix}-api-sg" }
-}
-
-# Mudança aplicada via GitOps (PR → plan comentado → merge → apply)
-resource "aws_security_group_rule" "allow_https" {
-  type              = "ingress"
-  from_port         = 443
-  to_port           = 443
-  protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
-  security_group_id = aws_security_group.technova_api.id
-  description       = "Allow HTTPS inbound"
 }
 
 # ---------------------------------------------------------------------------
