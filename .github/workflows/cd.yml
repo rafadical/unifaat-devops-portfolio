@@ -1,0 +1,182 @@
+name: CD Pipeline — Aula 10
+
+# Continuous Deployment: cada push na main que muda a API passa por
+# lint → test → build/push no ECR → deploy Recreate na EC2 → health check.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'aula-10/technova-api/**'
+      - '.github/workflows/cd.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-aula10
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  IMAGE_NAME: technova-api
+  APP_DIR: aula-10/technova-api
+  EC2_USERNAME: ec2-user # usuário padrão da AMI Amazon Linux 2023
+
+jobs:
+  lint:
+    name: Lint (ESLint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: aula-10/technova-api/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+
+  test:
+    name: Test (Jest)
+    needs: lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.APP_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: aula-10/technova-api/package-lock.json
+      - run: npm ci
+      - run: npm run test:ci
+        env:
+          NODE_ENV: test
+
+  build-push:
+    name: Build e Push (Amazon ECR)
+    needs: [lint, test]
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.tag.outputs.image_tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Learner Lab: credenciais temporárias de sessão (sem OIDC disponível).
+      - name: Configurar credenciais AWS (Learner Lab)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login no Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Definir tag da imagem
+        id: tag
+        run: echo "image_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Build e Push (tags sha + latest)
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.APP_DIR }}
+          push: true
+          tags: |
+            ${{ steps.ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.image_tag }}
+            ${{ steps.ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:latest
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+  deploy:
+    name: Deploy (Recreate) + Health Check
+    needs: build-push
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      IMAGE_TAG: ${{ needs.build-push.outputs.image_tag }}
+    steps:
+      - name: Deploy via SSH (estratégia Recreate)
+        uses: appleboy/ssh-action@v1
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_REGION: ${{ env.AWS_REGION }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+          GIT_SHA: ${{ github.sha }}
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ env.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY,AWS_SESSION_TOKEN,AWS_REGION,IMAGE_TAG,GIT_SHA
+          script: |
+            set -e
+            ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+            REGISTRY="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+            IMAGE="${REGISTRY}/technova-api:${IMAGE_TAG}"
+
+            echo "Login no Amazon ECR (antes do pull)..."
+            aws ecr get-login-password --region "$AWS_REGION" \
+              | docker login --username AWS --password-stdin "$REGISTRY"
+
+            echo "Pull de ${IMAGE}..."
+            docker pull "$IMAGE"
+
+            echo "Recreate: parando e removendo o container atual..."
+            docker stop technova-api || true
+            docker rm technova-api || true
+
+            echo "Subindo a nova versao..."
+            docker run -d \
+              --name technova-api \
+              -p 3000:3000 \
+              --restart unless-stopped \
+              -e NODE_ENV=production \
+              -e GIT_SHA="$GIT_SHA" \
+              -e DEPLOY_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              "$IMAGE"
+
+            docker ps --filter name=technova-api
+            docker image prune -f
+
+      - name: Health Check
+        run: |
+          URL="http://${{ secrets.EC2_HOST }}:3000"
+          echo "Aguardando a aplicacao iniciar..."
+          sleep 10
+          for i in $(seq 1 20); do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" "$URL/health" || echo "000")
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "Health check passou (HTTP $HTTP_CODE) na tentativa $i"
+              # Confirma que é a versão recém-implantada, não o container antigo
+              DEPLOYED=$(curl -s "$URL/version" | jq -r .commit)
+              if [ "$DEPLOYED" != "${{ github.sha }}" ]; then
+                echo "Versao em execucao ($DEPLOYED) difere do commit ${{ github.sha }}"
+                exit 1
+              fi
+              echo "Versao confirmada: $DEPLOYED"
+              exit 0
+            fi
+            echo "Tentativa $i/20 - HTTP $HTTP_CODE - aguardando 5s..."
+            sleep 5
+          done
+          echo "Health check falhou apos 20 tentativas"
+          exit 1
+
+      - name: Resumo do deploy
+        if: success()
+        run: |
+          echo "### Deploy concluído" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Imagem: \`technova-api:${IMAGE_TAG}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Por: @${{ github.actor }}" >> "$GITHUB_STEP_SUMMARY"
