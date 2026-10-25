@@ -77,6 +77,17 @@ resource "aws_security_group" "technova_api" {
   tags = { Name = "${local.prefix}-api-sg" }
 }
 
+# Mudança aplicada via GitOps (PR → plan comentado → merge → apply)
+resource "aws_security_group_rule" "allow_https" {
+  type              = "ingress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.technova_api.id
+  description       = "Allow HTTPS inbound"
+}
+
 # ---------------------------------------------------------------------------
 # Registry: repositório ECR que recebe as imagens do pipeline CD
 # ---------------------------------------------------------------------------
