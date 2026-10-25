@@ -1,0 +1,113 @@
+name: Terraform Plan — Aula 10
+
+# GitOps: todo PR que muda a infraestrutura recebe o plan como comentário.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'aula-10/terraform/**.tf'
+      - 'aula-10/terraform/**.tfvars'
+      - 'aula-10/terraform/user-data.sh'
+      - '.github/workflows/terraform-plan.yml'
+
+permissions:
+  contents: read        # ler o código
+  pull-requests: write  # postar o comentário com o plan
+
+concurrency:
+  group: terraform-aula10
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: us-east-1
+  TF_WORKING_DIR: aula-10/terraform
+  TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+
+jobs:
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.TF_WORKING_DIR }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Learner Lab: não permite OIDC nem roles IAM, então usamos as
+      # 3 credenciais temporárias da sessão. Em produção: role-to-assume + OIDC.
+      - name: Configurar credenciais AWS (Learner Lab)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.5
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        run: terraform init -input=false -backend-config="bucket=${{ vars.TF_STATE_BUCKET }}"
+
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -no-color -input=false -out=tfplan
+        continue-on-error: true
+
+      - name: Postar plan como comentário no PR
+        uses: actions/github-script@v7
+        env:
+          PLAN: ${{ steps.plan.outputs.stdout }}
+          PLAN_ERR: ${{ steps.plan.outputs.stderr }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const max = 60000; // limite de tamanho do comentário no GitHub
+            let plan = (process.env.PLAN || '') + (process.env.PLAN_ERR || '');
+            if (plan.length > max) {
+              plan = plan.substring(0, max) + '\n... (truncado; veja o log completo no Actions)';
+            }
+            const icon = (o) => (o === 'success' ? '✅' : '❌');
+            const body = `#### Terraform Plan — aula-10 📖
+
+            | Etapa | Resultado |
+            |---|---|
+            | fmt | ${icon('${{ steps.fmt.outcome }}')} |
+            | init | ${icon('${{ steps.init.outcome }}')} |
+            | validate | ${icon('${{ steps.validate.outcome }}')} |
+            | plan | ${icon('${{ steps.plan.outcome }}')} |
+
+            <details open><summary>Saída do plan</summary>
+
+            \`\`\`terraform
+            ${plan}
+            \`\`\`
+
+            </details>
+
+            *Disparado por @${{ github.actor }} em \`${{ github.event.pull_request.head.ref }}\` — o apply só roda após o merge na main.*`;
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body
+            });
+
+      - name: Falhar se fmt ou plan falharam
+        if: steps.plan.outcome == 'failure' || steps.fmt.outcome == 'failure'
+        run: exit 1
