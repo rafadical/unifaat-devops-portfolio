@@ -114,6 +114,8 @@ Essas verificações não acessam a AWS.
 
 **Ajuste feito durante a revisão do PR #1:** a primeira versão usava `aws_security_group_rule` separado. Como o SG já tem regras inline, cada apply removeria a regra criada pelo outro recurso. A regra foi movida para um bloco `ingress` inline no mesmo PR, e o plan final ficou `0 to add, 1 to change, 0 to destroy`. É exatamente o tipo de problema que o plan no PR existe para pegar.
 
+**Infraestrutura destruída em 25/10/2026** após a coleta das evidências (`terraform destroy` em `terraform/` e `bootstrap/`, bucket do state esvaziado e removido), para não consumir o crédito do Learner Lab. Os links acima continuam válidos; o endereço da API não responde mais.
+
 ## Autenticação
 
 No Learner Lab o GitHub Actions usa as credenciais temporárias de sessão, porque o Lab não permite criar OIDC provider nem roles IAM. Em produção, o correto seria OIDC + `role-to-assume`, sem nenhuma chave guardada. Detalhes em [`gitops-cd-analise.md`](gitops-cd-analise.md#2-autenticação-na-aws).
