@@ -1,0 +1,9 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+.env
+*.pem
+# Os terraform.tfvars dos ambientes não têm segredos e fazem parte da entrega
+!environments/*/terraform.tfvars

@@ -1,0 +1,21 @@
+# Validação local — 12/11/2026 — Terraform v1.13.5
+
+$ terraform fmt -check -recursive
+(sem diferenças)
+
+$ cd environments/dev && terraform validate
+Success! The configuration is valid.
+
+
+$ cd environments/staging && terraform validate
+Success! The configuration is valid.
+
+
+$ cd environments/dev && terraform test
+tests/composicao.tftest.hcl... in progress
+  run "dev_cria_subnets_e_composicao"... pass
+  run "staging_usa_os_mesmos_modulos_com_outros_valores"... pass
+tests/composicao.tftest.hcl... tearing down
+tests/composicao.tftest.hcl... pass
+
+Success! 2 passed, 0 failed.
