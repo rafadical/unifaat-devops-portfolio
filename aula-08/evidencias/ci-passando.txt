@@ -1,0 +1,29 @@
+# CI Pipeline — Aula 08 — execução VERDE (push na main)
+# https://github.com/rafadical/unifaat-devops-portfolio/actions/runs/43982958949
+job Lint (ESLint): success
+job Testes (Jest) — Node 18: success
+job Testes (Jest) — Node 20: success
+job Build Docker + Smoke Test: success
+job Comentar resultado no PR: skipped
+
+## Lint
+> eslint .
+
+## Testes (Node 18 e 20)
+All files  |      90 |    72.22 |   85.71 |   89.65 |                   
+Tests:       10 passed, 10 total
+
+## Cache do npm (setup-node)
+Cache Size: ~8 MB (8808205 B)
+Cache hit for: node-cache-Linux-x64-npm-a3012a9b9949004d4cef1df35cd5cfafed679d30bfc370bc14f98929cd4aece5
+Cache hit occurred on the primary key node-cache-Linux-x64-npm-a3012a9b9949004d4cef1df35cd5cfafed679d30bfc370bc14f98929cd4aece5, not saving cache.
+Cache restored from key: node-cache-Linux-x64-npm-a3012a9b9949004d4cef1df35cd5cfafed679d30bfc370bc14f98929cd4aece5
+
+## Secret AWS_REGION (mascarado pelo GitHub)
+Regiao configurada via secret: ***
+
+## Docker build + smoke test
+#12 naming to docker.io/library/technova-api:b2e4dbfe4ff34a9fc98239190cad4d8f08c94c5c done
+#12 naming to docker.io/library/technova-api:latest done
+{"status":"ok","timestamp":"2026-11-16T23:53:02.986Z","version":"1.0.0"}
+Smoke test OK na tentativa 2

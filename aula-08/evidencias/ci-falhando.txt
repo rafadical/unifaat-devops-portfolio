@@ -1,0 +1,22 @@
+# CI Pipeline — Aula 08 — execução FALHANDO (erro de lint intencional)
+# PR: https://github.com/rafadical/unifaat-devops-portfolio/pull/2 (fechado sem merge)
+# https://github.com/rafadical/unifaat-devops-portfolio/actions/runs/43983106146
+job Lint (ESLint): failure
+job Comentar resultado no PR: success
+job Testes (Jest) — Node (matrix): skipped
+job Build Docker + Smoke Test: skipped
+
+## Erro do ESLint
+##[error]  4:22  error  Missing semicolon  semi
+✖ 1 problem (1 error, 0 warnings)
+
+## Comentário automático no PR
+### Resultado do CI — Aula 08
+
+| Job | Resultado |
+|---|---|
+| Lint (ESLint) | ❌ |
+| Testes (Jest, Node 18 e 20) | ⏭️ |
+| Build Docker + Smoke Test | ⏭️ |
+
+[Ver execução](https://github.com/rafadical/unifaat-devops-portfolio/actions/runs/43983106146) · commit `bb63fb0`
