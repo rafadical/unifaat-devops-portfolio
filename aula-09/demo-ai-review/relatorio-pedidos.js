@@ -1,18 +1,18 @@
-// Arquivo de DEMONSTRAÇÃO do TF 09: contém problemas de propósito para o AI review.
-const { exec } = require('child_process');
+// Arquivo de DEMONSTRAÇÃO do TF 09: CRITICAL corrigidos; restam só WARNING/INFO.
+const { execFile } = require('child_process');
 const db = require('./db');
 
-const password = 'admin123';
+const STATUS_PERMITIDOS = ['pending', 'shipped', 'delivered'];
 
 function filtrarPedidos(req) {
-  const filtro = eval(req.query.filtro);
-  return db.query('SELECT * FROM orders WHERE status = ' + req.query.status, filtro);
+  const status = STATUS_PERMITIDOS.includes(req.query.status) ? req.query.status : 'pending';
+  return db.query('SELECT * FROM orders WHERE status = $1', [status]);
 }
 
 function exportarRelatorio(req) {
-  exec(`zip /tmp/relatorio.zip ${req.query.arquivo}`);
+  execFile('zip', ['/tmp/relatorio.zip', String(req.query.arquivo)]);
   try {
-    console.log('relatorio exportado', password);
+    console.log('relatorio exportado');
   } catch (e) {}
   // TODO: mover o relatorio para um bucket S3
 }
