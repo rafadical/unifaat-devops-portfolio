@@ -1,0 +1,85 @@
+name: AI Code Review
+
+# Revisa todo Pull Request: analisa o diff, comenta no PR e aplica o quality gate.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  ai-review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código (histórico completo para o diff)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Testar o próprio revisor
+        run: node --test .github/scripts/ai-review.test.js
+
+      - name: Coletar arquivos alterados e diff do PR
+        run: |
+          BASE="origin/${{ github.base_ref }}"
+          echo "Arquivos alterados:"
+          git diff --name-only "$BASE"...HEAD
+          git diff "$BASE"...HEAD > pr.diff
+          echo "Linhas no diff: $(wc -l < pr.diff)"
+
+      - name: Executar análise
+        id: review
+        env:
+          DIFF_FILE: pr.diff
+          REVIEW_OUTPUT: ai-review-result.md
+        run: node .github/scripts/ai-review.js
+
+      - name: Publicar resumo na execução
+        run: cat ai-review-result.md >> "$GITHUB_STEP_SUMMARY"
+
+      # Atualiza o comentário anterior do bot em vez de criar um novo a cada push
+      - name: Comentar (ou atualizar comentário) no PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { MARKER } = require('./.github/scripts/ai-review.js');
+            const body = fs.readFileSync('ai-review-result.md', 'utf8');
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+
+            const comments = await github.paginate(github.rest.issues.listComments, { owner, repo, issue_number });
+            const previous = comments.find(c => c.user.type === 'Bot' && c.body.includes(MARKER));
+
+            if (previous) {
+              await github.rest.issues.updateComment({ owner, repo, comment_id: previous.id, body });
+              core.info(`Comentário ${previous.id} atualizado`);
+            } else {
+              await github.rest.issues.createComment({ owner, repo, issue_number, body });
+              core.info('Comentário criado');
+            }
+
+      - name: Quality gate (CRITICAL bloqueia o PR)
+        run: |
+          CRITICAL="${{ steps.review.outputs.critical }}"
+          WARNING="${{ steps.review.outputs.warning }}"
+          INFO="${{ steps.review.outputs.info }}"
+          echo "CRITICAL=$CRITICAL WARNING=$WARNING INFO=$INFO"
+          if [ "$CRITICAL" != "0" ]; then
+            echo "::error::Quality gate: $CRITICAL achado(s) CRITICAL. Corrija antes do merge."
+            exit 1
+          fi
+          echo "Quality gate aprovado: nenhum achado CRITICAL."

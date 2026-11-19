@@ -1,0 +1,63 @@
+name: Security Scan — Aula 09
+
+# Workflow dedicado de segurança (bônus): dependências vulneráveis e imagem Docker.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'aula-09/technova-api/**'
+      - '.github/workflows/security-scan.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'aula-09/technova-api/**'
+      - '.github/workflows/security-scan.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: aula-09/technova-api
+
+jobs:
+  dependencies:
+    name: npm audit (dependências de produção)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: aula-09/technova-api/package-lock.json
+      - run: npm ci --omit=dev
+      - name: Falhar com vulnerabilidade HIGH ou CRITICAL
+        run: npm audit --omit=dev --audit-level=high
+
+  image:
+    name: Trivy (Dockerfile e imagem)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build da imagem
+        run: docker build -t technova-api:scan .
+
+      - name: Trivy — configuração do Dockerfile
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: aula-09/technova-api
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+
+      - name: Trivy — vulnerabilidades da imagem (relatório)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: technova-api:scan
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '0'
