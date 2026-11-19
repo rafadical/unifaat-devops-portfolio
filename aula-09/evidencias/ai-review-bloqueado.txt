@@ -1,0 +1,27 @@
+# AI Code Review — execução 44637843540 (bloqueado)
+# PR: https://github.com/rafadical/unifaat-devops-portfolio/pull/3
+# https://github.com/rafadical/unifaat-devops-portfolio/actions/runs/44637843540
+# commit: 0ca0624790458b6c9d6901a4a0ce67f7f6613bd6
+conclusao do job: failure
+
+## Testes do revisor
+# tests 8
+# pass 8
+# fail 0
+
+## Análise
+Achados: 7 (CRITICAL 4, WARNING 2, INFO 1)
+  [CRITICAL] aula-09/demo-ai-review/relatorio-pedidos.js:5 hardcoded-secret
+  [CRITICAL] aula-09/demo-ai-review/relatorio-pedidos.js:8 eval
+  [CRITICAL] aula-09/demo-ai-review/relatorio-pedidos.js:9 sql-injection
+  [CRITICAL] aula-09/demo-ai-review/relatorio-pedidos.js:13 command-injection
+  [WARNING] aula-09/demo-ai-review/relatorio-pedidos.js:15 console-log
+  [WARNING] aula-09/demo-ai-review/relatorio-pedidos.js:16 empty-catch
+  [INFO] aula-09/demo-ai-review/relatorio-pedidos.js:17 todo
+
+## Comentário no PR
+Comentário criado
+
+## Quality gate
+CRITICAL=4 WARNING=2 INFO=1
+##[error]Quality gate: 4 achado(s) CRITICAL. Corrija antes do merge.

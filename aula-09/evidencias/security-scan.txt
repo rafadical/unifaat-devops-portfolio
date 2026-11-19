@@ -1,0 +1,15 @@
+# Security Scan — Aula 09 — execução 44637981706
+# https://github.com/rafadical/unifaat-devops-portfolio/actions/runs/44637981706
+job npm audit (dependências de produção): success
+job Trivy (Dockerfile e imagem): success
+
+## npm audit
+found 0 vulnerabilities
+found 0 vulnerabilities
+
+## Trivy
+Report Summary
+│   Target   │    Type    │ Misconfigurations │
+Report Summary
+Total: 7 (HIGH: 7, CRITICAL: 0)
+Total: 22 (HIGH: 21, CRITICAL: 1)
