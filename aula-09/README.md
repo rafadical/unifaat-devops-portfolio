@@ -59,6 +59,8 @@ No GitHub: Actions → **CI + ECR — Aula 09** → *Run workflow* com `rollback
 
 Secrets necessários (Settings → Secrets and variables → Actions): `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN` da sessão do Lab. Eles expiram quando o Lab reinicia.
 
+A publicação no ECR só roda com a variável de repositório `ECR_ENABLED = true` (Settings → Secrets and variables → Actions → Variables). Sem sessão válida do Lab, deixe-a desligada: lint e testes continuam rodando e o job de push é pulado em vez de falhar.
+
 - Push na `main` alterando `aula-09/` → build e push `sha-*` + `latest`.
 - Push de tag `v*.*.*` → também as tags semver.
 
@@ -74,6 +76,14 @@ git diff origin/main...HEAD > pr.diff
 DIFF_FILE=pr.diff node .github/scripts/ai-review.js --gate
 ```
 
-## Evidências
+## Situação da execução
 
-Ver [`evidencias/`](evidencias/) e [`screenshots/`](screenshots/).
+| Parte | Executado | Evidência |
+|---|---|---|
+| AI review comentando no PR | ✅ | [PR #3](https://github.com/rafadical/unifaat-devops-portfolio/pull/3), [`evidencias/ai-review-bloqueado.txt`](evidencias/ai-review-bloqueado.txt) |
+| Quality gate bloqueando CRITICAL | ✅ | [execução 44637843540](https://github.com/rafadical/unifaat-devops-portfolio/actions/runs/44637843540) (falhou de propósito) |
+| Gate liberando só WARNING/INFO + comentário atualizado | ✅ | [execução 44638112212](https://github.com/rafadical/unifaat-devops-portfolio/actions/runs/44638112212), [`evidencias/ai-review-aprovado.txt`](evidencias/ai-review-aprovado.txt) |
+| Security scan (npm audit + Trivy) | ✅ | [execução 44637981706](https://github.com/rafadical/unifaat-devops-portfolio/actions/runs/44637981706), [`evidencias/security-scan.txt`](evidencias/security-scan.txt) |
+| Push no Amazon ECR, tags semver e rollback | ❌ não executado | A sessão do Learner Lab estava expirada na data da entrega. `ecr-push.sh`, `ecr-rollback.sh` e o job `build-push` estão prontos e validados (`bash -n`), mas não há evidência de execução na AWS. |
+
+O security scan também encontrou uma vulnerabilidade real (HIGH) no `body-parser` usado pelo Express ([GHSA-27r3-jxmh-p828](https://github.com/advisories/GHSA-27r3-jxmh-p828)), corrigida com `npm audit fix` antes da entrega.

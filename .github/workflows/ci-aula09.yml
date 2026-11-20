@@ -1,0 +1,135 @@
+name: CI + ECR — Aula 09
+
+# lint → test → build/push no Amazon ECR (via ecr-push.sh) → pull de verificação.
+# Tags: sha-<commit> e latest em todo push na main; 1.2.3 / 1.2 / 1 em git tags v*.*.*.
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+    paths:
+      - 'aula-09/**'
+      - '.github/workflows/ci-aula09.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'aula-09/**'
+      - '.github/workflows/ci-aula09.yml'
+  workflow_dispatch:
+    inputs:
+      rollback_tag:
+        description: 'Tag a restaurar (ex.: 1.0.0). Vazio = pipeline normal.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-aula09-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPO: technova-api
+
+jobs:
+  lint:
+    name: Lint (ESLint)
+    if: inputs.rollback_tag == ''
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: aula-09/technova-api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: aula-09/technova-api/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+
+  test:
+    name: Testes (Jest)
+    needs: lint
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: aula-09/technova-api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: aula-09/technova-api/package-lock.json
+      - run: npm ci
+      - run: npm test -- --ci
+        env:
+          NODE_ENV: test
+
+  build-push:
+    name: Build e Push (Amazon ECR)
+    needs: test
+    # Em PR só valida; publicar no registry é só na main ou em tag de release.
+    # ECR_ENABLED (Settings → Variables) liga a publicação quando há sessão
+    # válida do Learner Lab nos secrets; sem ela, o job é pulado em vez de falhar.
+    if: github.event_name != 'pull_request' && vars.ECR_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # precisa das git tags para o semver
+
+      # Learner Lab: credenciais temporárias da sessão (não há OIDC nem IAM)
+      - name: Configurar credenciais AWS (Learner Lab)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login no Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag e push (ecr-push.sh)
+        run: bash aula-09/ecr-push.sh
+
+      - name: Verificar pull por tag (como um servidor faria)
+        run: |
+          IMAGE="${{ steps.ecr.outputs.registry }}/$ECR_REPO:sha-${GITHUB_SHA::7}"
+          docker rmi -f "$IMAGE" "$ECR_REPO:local" >/dev/null 2>&1 || true
+          docker pull "$IMAGE"
+          docker run -d --name smoke -p 3000:3000 "$IMAGE"
+          for i in $(seq 1 15); do curl -fsS localhost:3000/health && break; sleep 2; done
+          docker rm -f smoke
+
+      - name: Tags publicadas no ECR
+        run: |
+          aws ecr describe-images --repository-name "$ECR_REPO" \
+            --query 'reverse(sort_by(imageDetails,&imagePushedAt))[].[imageTags | join(`, `, @), imagePushedAt]' \
+            --output table
+
+  rollback:
+    name: Rollback para ${{ inputs.rollback_tag }}
+    if: inputs.rollback_tag != '' && vars.ECR_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar credenciais AWS (Learner Lab)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login no Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Pull e execução da tag escolhida (ecr-rollback.sh)
+        run: bash aula-09/ecr-rollback.sh "${{ inputs.rollback_tag }}"
